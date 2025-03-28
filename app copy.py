@@ -8,10 +8,11 @@ import streamlit as st
 
 # Show app title and description.
 st.set_page_config(page_title="PASCOM Venda de Tickets", page_icon="🎫")
-st.title("🎫 Support tickets")
+st.title("🎫 PASCOM Vendas")
 st.write(
     """
-    App simplificado de venda de tickets
+    App simplificado de venda de tickets desenvolvido por Jone Correia
+
     """
 )
 
