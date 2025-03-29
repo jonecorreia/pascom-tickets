@@ -702,6 +702,50 @@
                     {
                         "data": "29/03/2025 11:41:42",
                         "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:43:06",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:52:13",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:54:05",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:03:56",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:05:57",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:07:34",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:10:26",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:11:57",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:12:16",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:14:12",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:17:38",
+                        "status": "REVENDA"
                     }
                 ],
                 "STATUS": "REVENDA"
@@ -759,6 +803,50 @@
                     },
                     {
                         "data": "29/03/2025 11:42:06",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:53:58",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:54:13",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:58:49",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:01:14",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:02:49",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:06:14",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:12:09",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:13:16",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:16:20",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:17:21",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:17:51",
                         "status": "REVENDA"
                     }
                 ],

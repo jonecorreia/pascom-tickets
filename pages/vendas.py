@@ -6,8 +6,8 @@ import os
 import json
 from datetime import datetime
 from app_config import CREDITO, STATUS_CORES
-import base64
-import time
+from PIL import Image, ImageDraw
+import io
 
 # Configuração inicial
 data_path = "data/tickets_control.json"
@@ -48,7 +48,6 @@ def verificar_qrcode(data):
                 atualizar_tickets(tickets)
                 return True, ticket['code'], leitura_atual['data'], status
 
-    # Ticket não localizado
     return False, data, leitura_atual['data'], leitura_atual['status']
 
 # Interface Streamlit
@@ -56,7 +55,6 @@ st.set_page_config(page_title="Vendas", page_icon="🛒", layout="centered")
 st.title("🛒 Vendas com QR-Code")
 st.markdown("---")
 
-# Controle de leitura
 if "captura_ativa" not in st.session_state:
     st.session_state.captura_ativa = True
 
@@ -69,22 +67,59 @@ if "imagem_leitura" not in st.session_state:
 if "audio" not in st.session_state:
     st.session_state.audio = False
 
-btn = st.button(
-    "PARAR LEITURAS" if st.session_state.captura_ativa else "INICIAR LEITURAS",
-    use_container_width=True
-)
+if "usar_audio" not in st.session_state:
+    st.session_state.usar_audio = True
 
-if btn:
-    st.session_state.captura_ativa = not st.session_state.captura_ativa
+if "bbox_leitura" not in st.session_state:
+    st.session_state.bbox_leitura = None
 
-st.markdown(f"<small>Leituras {'ativas' if st.session_state.captura_ativa else 'pausadas'}</small>", unsafe_allow_html=True)
+col_btn, col_cb = st.columns([4, 1])
+
+with col_btn:
+    texto_botao = "🔴 PARAR LEITURAS" if st.session_state.captura_ativa else "🟢 INICIAR LEITURAS"
+    if st.button(texto_botao, use_container_width=True):
+        st.session_state.captura_ativa = not st.session_state.captura_ativa
+
+with col_cb:
+    st.session_state.usar_audio = st.checkbox("Som", value=st.session_state.usar_audio)
+
+st.markdown(f"<p style='color:gray'>Leituras {'ativas' if st.session_state.captura_ativa else 'pausadas'}</p>", unsafe_allow_html=True)
+
+# Pré-carregar o som de venda (invisível, preparado para execução)
+st.markdown("""
+<audio id="beep-audio" preload="auto">
+    <source src="assets/som/venda.mp3" type="audio/mpeg">
+</audio>
+""", unsafe_allow_html=True)
 
 # Captura da câmera
-if st.session_state.captura_ativa:
-    image = camera_input_live()
-else:
-    image = None
+image = camera_input_live() if st.session_state.captura_ativa else None
 
+# Layout da visualização com colunas
+st.markdown("## 📷 Visualização")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("#### 🎥 Câmera ao vivo")
+    if image is not None:
+        st.image(image, caption="Preview", use_container_width=True)
+
+with col2:
+    st.markdown("#### ✅ Última leitura")
+    if st.session_state.imagem_leitura:
+        pil_image = Image.open(st.session_state.imagem_leitura)
+        draw = ImageDraw.Draw(pil_image)
+
+        if st.session_state.bbox_leitura is not None:
+            bbox = st.session_state.bbox_leitura.astype(int)
+            for i in range(len(bbox[0])):
+                pt1 = tuple(bbox[0][i])
+                pt2 = tuple(bbox[0][(i + 1) % len(bbox[0])])
+                draw.line([pt1, pt2], fill="green", width=5)
+
+        st.image(pil_image, caption="Última Leitura", use_container_width=True)
+
+# Processamento da imagem
 if image is not None:
     bytes_data = image.getvalue()
     cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
@@ -94,30 +129,20 @@ if image is not None:
     if data and (st.session_state.ultima_leitura != data):
         st.session_state.ultima_leitura = data
         st.session_state.imagem_leitura = image
+        st.session_state.bbox_leitura = bbox
 
         localizado, codigo, data_venda, status = verificar_qrcode(data)
         cor = STATUS_CORES.get(status, "gray")
 
         st.toast(f"{status}: {codigo}", icon="✅")
 
-        if status == "DISPONÍVEL":
-            st.session_state.audio = True
-        elif status == "REVENDA":
-            st.session_state.audio = True
-        elif status == "NÃO LOCALIZADO":
-            st.session_state.audio = False
-
-if st.session_state.audio:
-    st.markdown("""
-        <audio autoplay>
-            <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
-        </audio>
-    """, unsafe_allow_html=True)
-    st.session_state.audio = False
-
-# Mostrar imagem do QR lido
-if st.session_state.imagem_leitura:
-    st.image(st.session_state.imagem_leitura, caption="Última Leitura", width=300)
+        if status in ["DISPONÍVEL", "REVENDA"] and st.session_state.usar_audio:
+            st.markdown("""
+            <script>
+            var audio = document.getElementById("beep-audio");
+            if(audio) { audio.play(); }
+            </script>
+            """, unsafe_allow_html=True)
 
 # Histórico de leituras
 st.markdown("---")
