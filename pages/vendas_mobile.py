@@ -69,7 +69,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if not st.session_state.found_qr:
-    image = camera_input_live()
+    image = camera_input_live(facing_mode='environment', key='mobile_camera')
 else:
     image = st.session_state.qr_code_image
 
