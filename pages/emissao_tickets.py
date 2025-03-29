@@ -26,7 +26,7 @@ uploaded_file = st.file_uploader("Faça upload da imagem dos tickets em branco",
 
 if uploaded_file:
     img = Image.open(uploaded_file)
-    st.image(img, caption="Imagem carregada", use_column_width=True)
+    st.image(img, caption="Imagem carregada", use_container_width=True)
 
     num_tickets = st.number_input("Número de tickets a gerar", min_value=1, max_value=1000, value=36)
 
