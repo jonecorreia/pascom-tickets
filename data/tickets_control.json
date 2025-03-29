@@ -24,7 +24,18 @@
                     {
                         "data_venda": "28/03/2025 22:26:20"
                     }
-                ]
+                ],
+                "historico": [
+                    {
+                        "data": "29/03/2025 13:41:15",
+                        "status": "DISPON\u00cdVEL"
+                    },
+                    {
+                        "data": "29/03/2025 13:41:16",
+                        "status": "REVENDA"
+                    }
+                ],
+                "STATUS": "REVENDA"
             },
             {
                 "pdf": "P.00003.pdf",
