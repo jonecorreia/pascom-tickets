@@ -73,7 +73,7 @@ if "usar_audio" not in st.session_state:
 if "bbox_leitura" not in st.session_state:
     st.session_state.bbox_leitura = None
 
-col_btn, col_cb = st.columns([4, 1])
+col_btn, col_cb, col_play = st.columns([4, 1, 1])
 
 with col_btn:
     texto_botao = "🔴 PARAR LEITURAS" if st.session_state.captura_ativa else "🟢 INICIAR LEITURAS"
@@ -82,6 +82,15 @@ with col_btn:
 
 with col_cb:
     st.session_state.usar_audio = st.checkbox("Som", value=st.session_state.usar_audio)
+
+with col_play:
+    if st.button("▶️", help="Testar som"):
+        st.markdown("""
+        <script>
+        var audio = document.getElementById("beep-audio");
+        if(audio) { audio.play(); }
+        </script>
+        """, unsafe_allow_html=True)
 
 st.markdown(f"<p style='color:gray'>Leituras {'ativas' if st.session_state.captura_ativa else 'pausadas'}</p>", unsafe_allow_html=True)
 
