@@ -7,7 +7,7 @@ import qrcode
 import io
 import os
 import json
-from config import *
+from app_config import *
 from datetime import datetime
 import uuid
 

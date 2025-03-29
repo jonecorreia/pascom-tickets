@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import json
 from datetime import datetime
-from config import *
+from app_config import *
 from PIL import Image
 from pyzbar.pyzbar import decode
 

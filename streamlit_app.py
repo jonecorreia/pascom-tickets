@@ -1,5 +1,5 @@
 import streamlit as st
-from config import *
+from app_config import *
 
 # Configuração inicial da página
 st.set_page_config(page_title="Controle de Tickets", page_icon="🎟️", layout="centered")
