@@ -13,7 +13,18 @@
                 "code": "P.00003.00001",
                 "description": "",
                 "vendido": true,
-                "data_venda": "28/03/2025 22:06:49"
+                "data_venda": "28/03/2025 22:06:49",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:20:12"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:34"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:26:20"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
@@ -21,7 +32,18 @@
                 "code": "P.00003.00002",
                 "description": "",
                 "vendido": true,
-                "data_venda": "28/03/2025 22:06:56"
+                "data_venda": "28/03/2025 22:06:56",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:20:11"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:20:22"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:38"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
@@ -29,7 +51,12 @@
                 "code": "P.00003.00003",
                 "description": "",
                 "vendido": true,
-                "data_venda": "28/03/2025 22:06:59"
+                "data_venda": "28/03/2025 22:06:59",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:20:24"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
@@ -37,7 +64,12 @@
                 "code": "P.00003.00004",
                 "description": "",
                 "vendido": true,
-                "data_venda": "28/03/2025 22:06:55"
+                "data_venda": "28/03/2025 22:06:55",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:26:17"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
@@ -45,7 +77,15 @@
                 "code": "P.00003.00005",
                 "description": "",
                 "vendido": true,
-                "data_venda": "28/03/2025 22:07:06"
+                "data_venda": "28/03/2025 22:07:06",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:25:54"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:57"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
@@ -53,43 +93,108 @@
                 "code": "P.00003.00006",
                 "description": "",
                 "vendido": true,
-                "data_venda": "28/03/2025 22:07:00"
+                "data_venda": "28/03/2025 22:07:00",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:25:44"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:48"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:50"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 7,
                 "code": "P.00003.00007",
-                "description": ""
+                "description": "",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:25:55"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:26:13"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 8,
                 "code": "P.00003.00008",
-                "description": ""
+                "description": "",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:25:51"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:54"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:26:07"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 9,
                 "code": "P.00003.00009",
-                "description": ""
+                "description": "",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:25:48"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:49"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:25:50"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:26:06"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 10,
                 "code": "P.00003.00010",
-                "description": ""
+                "description": "",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:26:09"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 11,
                 "code": "P.00003.00011",
-                "description": ""
+                "description": "",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:22:53"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:26:07"
+                    },
+                    {
+                        "data_venda": "28/03/2025 22:26:08"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 12,
                 "code": "P.00003.00012",
-                "description": ""
+                "description": "",
+                "vendas": [
+                    {
+                        "data_venda": "28/03/2025 22:22:29"
+                    }
+                ]
             },
             {
                 "pdf": "P.00003.pdf",

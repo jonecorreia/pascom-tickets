@@ -6,6 +6,7 @@ import numpy as np
 import os
 import json
 from datetime import datetime
+import time
 from app_config import CREDITO
 
 # Configuração inicial
@@ -29,20 +30,25 @@ def verificar_qrcode(data):
     for geracao in tickets:
         for ticket in geracao['tickets']:
             if ticket['code'] == data:
-                if "vendido" not in ticket:
-                    ticket['vendido'] = True
-                    ticket['data_venda'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                venda_atual = {"data_venda": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
+                if "vendas" not in ticket:
+                    ticket['vendas'] = [venda_atual]
                     atualizar_tickets(tickets)
-                    return True, ticket['data_venda']
+                    return True, venda_atual["data_venda"], 1
                 else:
-                    return False, ticket['data_venda']
-    return None, None
+                    ticket['vendas'].append(venda_atual)
+                    atualizar_tickets(tickets)
+                    return False, venda_atual["data_venda"], len(ticket['vendas'])
+    return None, None, 0
 
 # Classe de processamento de vídeo
 class QRCodeProcessor(VideoProcessorBase):
     def __init__(self):
         self.qr_detector = cv2.QRCodeDetector()
         self.last_detected = None
+        self.message_time = None
+        self.message_text = ""
+        self.message_color = (0, 255, 0)
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
@@ -50,29 +56,30 @@ class QRCodeProcessor(VideoProcessorBase):
         data, bbox, _ = self.qr_detector.detectAndDecode(img)
         if bbox is not None and data:
             if data != self.last_detected and data.startswith("P."):
-                venda_status, data_venda = verificar_qrcode(data)
+                venda_status, data_venda, qtd_vendas = verificar_qrcode(data)
 
                 if venda_status is True:
-                    st.success(f"🎟️ Ticket {data} vendido em {data_venda}")
+                    self.message_text = f"Ticket {data} vendido!"
+                    self.message_color = (0, 255, 0)  # Verde
                     st.audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg")
-                    cor_mensagem = (0, 255, 0)  # Verde
                 elif venda_status is False:
-                    st.warning(f"⚠️ Ticket {data} já vendido em {data_venda}")
-                    cor_mensagem = (0, 0, 255)  # Vermelho
+                    self.message_text = f"Ticket {data} já vendido antes! ({qtd_vendas}x)"
+                    self.message_color = (0, 0, 255)  # Vermelho
                 else:
-                    st.error("❌ Ticket não encontrado.")
-                    cor_mensagem = (0, 0, 255)  # Vermelho
+                    self.message_text = "Ticket não encontrado!"
+                    self.message_color = (0, 0, 255)  # Vermelho
 
+                self.message_time = datetime.now()
                 self.last_detected = data
-
-                # Exibir mensagem no vídeo
-                cv2.putText(img, f"{data}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, cor_mensagem, 2, cv2.LINE_AA)
 
             n_points = len(bbox)
             for j in range(n_points):
                 pt1 = tuple(bbox[j][0].astype(int))
                 pt2 = tuple(bbox[(j + 1) % n_points][0].astype(int))
                 cv2.line(img, pt1, pt2, color=(0, 255, 0), thickness=2)
+
+        if self.message_time and (datetime.now() - self.message_time).seconds < 3:
+            cv2.putText(img, self.message_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, self.message_color, 2, cv2.LINE_AA)
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
@@ -89,22 +96,26 @@ webrtc_streamer(
 
 st.markdown("---")
 st.subheader("Últimas Vendas")
-tickets = carregar_tickets()
-ultimas_vendas = []
+placeholder = st.empty()
 
-for geracao in tickets:
-    for ticket in geracao['tickets']:
-        if "vendido" in ticket:
-            ultimas_vendas.append(ticket)
+while True:
+    tickets = carregar_tickets()
+    ultimas_vendas = []
 
-ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
+    for geracao in tickets:
+        for ticket in geracao['tickets']:
+            if "vendas" in ticket:
+                for idx, venda in enumerate(ticket["vendas"]):
+                    ultimas_vendas.append({"code": ticket['code'], "data_venda": venda["data_venda"], "primeira_venda": idx == 0})
 
-if ultimas_vendas:
-    for venda in ultimas_vendas[:10]:
-        cor_texto = "green" if venda['vendido'] else "red"
-        st.markdown(f"<span style='color:{cor_texto}'>🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}</span>", unsafe_allow_html=True)
-else:
-    st.info("Nenhum ticket vendido até o momento.")
+    ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
 
-st.markdown("---")
-st.caption(CREDITO)
+    with placeholder.container():
+        if ultimas_vendas:
+            for venda in ultimas_vendas[:10]:
+                cor_texto = "green" if venda['primeira_venda'] else "red"
+                st.markdown(f"<span style='color:{cor_texto}'>🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}</span>", unsafe_allow_html=True)
+        else:
+            st.info("Nenhum ticket vendido até o momento.")
+
+    time.sleep(3)
