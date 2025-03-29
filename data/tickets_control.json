@@ -661,8 +661,50 @@
                     },
                     {
                         "data_venda": "29/03/2025 11:11:57"
+                    },
+                    {
+                        "data_venda": "29/03/2025 11:15:33"
                     }
-                ]
+                ],
+                "historico": [
+                    {
+                        "data": "29/03/2025 11:30:50",
+                        "status": "DISPON\u00cdVEL"
+                    },
+                    {
+                        "data": "29/03/2025 11:30:51",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:35:11",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:35:12",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:38:47",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:38:48",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:39:32",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:41:26",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:41:42",
+                        "status": "REVENDA"
+                    }
+                ],
+                "STATUS": "REVENDA"
             },
             {
                 "pdf": "P.00003.pdf",
@@ -693,8 +735,34 @@
                     },
                     {
                         "data_venda": "29/03/2025 11:12:05"
+                    },
+                    {
+                        "data_venda": "29/03/2025 11:15:26"
                     }
-                ]
+                ],
+                "historico": [
+                    {
+                        "data": "29/03/2025 11:31:34",
+                        "status": "DISPON\u00cdVEL"
+                    },
+                    {
+                        "data": "29/03/2025 11:31:35",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:41:10",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:41:37",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 11:42:06",
+                        "status": "REVENDA"
+                    }
+                ],
+                "STATUS": "REVENDA"
             }
         ]
     }

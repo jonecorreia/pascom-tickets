@@ -1,12 +1,13 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
-import av
+from camera_input_live import camera_input_live
 import cv2
 import numpy as np
 import os
 import json
 from datetime import datetime
-from app_config import CREDITO
+from app_config import CREDITO, STATUS_CORES
+import base64
+import time
 
 # Configuração inicial
 data_path = "data/tickets_control.json"
@@ -23,118 +24,130 @@ def atualizar_tickets(tickets):
     with open(data_path, "w") as file:
         json.dump(tickets, file, indent=4)
 
-# Verificar e marcar venda
+# Verificar e marcar leitura
 def verificar_qrcode(data):
     tickets = carregar_tickets()
+    leitura_atual = {
+        "data": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        "status": "NÃO LOCALIZADO"
+    }
     for geracao in tickets:
         for ticket in geracao['tickets']:
             if ticket['code'] == data:
-                venda_atual = {"data_venda": datetime.now().strftime("%d/%m/%Y %H:%M:%S")}
-                if "vendas" not in ticket:
-                    ticket['vendas'] = [venda_atual]
-                    atualizar_tickets(tickets)
-                    return True, venda_atual["data_venda"], 1
-                else:
-                    ticket['vendas'].append(venda_atual)
-                    atualizar_tickets(tickets)
-                    return False, venda_atual["data_venda"], len(ticket['vendas'])
-    return None, None, 0
+                if "historico" not in ticket:
+                    ticket['historico'] = []
+                if "STATUS" not in ticket:
+                    ticket['STATUS'] = "DISPONÍVEL"
 
-# Classe de processamento de vídeo
-class QRCodeProcessor(VideoProcessorBase):
-    def __init__(self):
-        self.qr_detector = cv2.QRCodeDetector()
-        self.last_detected = None
-        self.message_time = None
-        self.message_text = ""
-        self.message_color = (0, 255, 0)
+                status = "DISPONÍVEL" if len(ticket['historico']) == 0 else "REVENDA"
+                ticket['STATUS'] = status
 
-    def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-        img = frame.to_ndarray(format="bgr24")
+                leitura_atual['status'] = status
+                ticket['historico'].append(leitura_atual)
 
-        data, bbox, _ = self.qr_detector.detectAndDecode(img)
-        if bbox is not None and data:
-            if data != self.last_detected and data.startswith("P."):
-                venda_status, data_venda, qtd_vendas = verificar_qrcode(data)
+                atualizar_tickets(tickets)
+                return True, ticket['code'], leitura_atual['data'], status
 
-                if venda_status is True:
-                    self.message_text = f"Nova venda ({data})!"
-                    self.message_color = (0, 255, 0)  # Verde
-                    st.session_state['audio'] = True
-                elif venda_status is False:
-                    self.message_text = f"{data} REUSO! ({qtd_vendas})"
-                    self.message_color = (0, 0, 255)  # Vermelho
-                else:
-                    self.message_text = "Não encontrado!"
-                    self.message_color = (0, 0, 255)  # Vermelho
-
-                self.message_time = datetime.now()
-                self.last_detected = data
-
-            n_points = len(bbox)
-            for j in range(n_points):
-                pt1 = tuple(bbox[j][0].astype(int))
-                pt2 = tuple(bbox[(j + 1) % n_points][0].astype(int))
-                cv2.line(img, pt1, pt2, color=(0, 255, 0), thickness=2)
-
-        if self.message_time and (datetime.now() - self.message_time).seconds < 3:
-            cv2.putText(img, self.message_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, self.message_color, 2, cv2.LINE_AA)
-
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
+    # Ticket não localizado
+    return False, data, leitura_atual['data'], leitura_atual['status']
 
 # Interface Streamlit
 st.set_page_config(page_title="Vendas", page_icon="🛒", layout="centered")
 st.title("🛒 Vendas com QR-Code")
 st.markdown("---")
 
-if 'audio' not in st.session_state:
-    st.session_state['audio'] = False
+# Controle de leitura
+if "captura_ativa" not in st.session_state:
+    st.session_state.captura_ativa = True
 
-# Desabilita o áudio da câmera
-rtc_config = RTCConfiguration({
-    "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}],
-    "sdpSemantics": "unified-plan"
-})
+if "ultima_leitura" not in st.session_state:
+    st.session_state.ultima_leitura = None
 
-webrtc_streamer(
-    key="qr-code-scanner",
-    video_processor_factory=QRCodeProcessor,
-    rtc_configuration=rtc_config,
-    media_stream_constraints={"video": True, "audio": False},
+if "imagem_leitura" not in st.session_state:
+    st.session_state.imagem_leitura = None
+
+if "audio" not in st.session_state:
+    st.session_state.audio = False
+
+btn = st.button(
+    "PARAR LEITURAS" if st.session_state.captura_ativa else "INICIAR LEITURAS",
+    use_container_width=True
 )
 
-# Reprodução do áudio fora do processamento pesado
-if st.session_state['audio']:
-    st.markdown("""
-    <audio autoplay>
-        <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
-    </audio>
-    """, unsafe_allow_html=True)
-    st.session_state['audio'] = False
+if btn:
+    st.session_state.captura_ativa = not st.session_state.captura_ativa
 
-# Atualização do histórico de vendas
+st.markdown(f"<small>Leituras {'ativas' if st.session_state.captura_ativa else 'pausadas'}</small>", unsafe_allow_html=True)
+
+# Captura da câmera
+if st.session_state.captura_ativa:
+    image = camera_input_live()
+else:
+    image = None
+
+if image is not None:
+    bytes_data = image.getvalue()
+    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+    detector = cv2.QRCodeDetector()
+    data, bbox, _ = detector.detectAndDecode(cv2_img)
+
+    if data and (st.session_state.ultima_leitura != data):
+        st.session_state.ultima_leitura = data
+        st.session_state.imagem_leitura = image
+
+        localizado, codigo, data_venda, status = verificar_qrcode(data)
+        cor = STATUS_CORES.get(status, "gray")
+
+        st.toast(f"{status}: {codigo}", icon="✅")
+
+        if status == "DISPONÍVEL":
+            st.session_state.audio = True
+        elif status == "REVENDA":
+            st.session_state.audio = True
+        elif status == "NÃO LOCALIZADO":
+            st.session_state.audio = False
+
+if st.session_state.audio:
+    st.markdown("""
+        <audio autoplay>
+            <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
+        </audio>
+    """, unsafe_allow_html=True)
+    st.session_state.audio = False
+
+# Mostrar imagem do QR lido
+if st.session_state.imagem_leitura:
+    st.image(st.session_state.imagem_leitura, caption="Última Leitura", width=300)
+
+# Histórico de leituras
 st.markdown("---")
-st.subheader("Últimas Vendas")
+st.subheader("Histórico de Leitura de Tickets")
 placeholder = st.empty()
 
-# Atualização leve e eficiente
-ultimas_vendas = []
+ultimas_leituras = []
 tickets = carregar_tickets()
 for geracao in tickets:
     for ticket in geracao['tickets']:
-        if "vendas" in ticket:
-            for idx, venda in enumerate(ticket["vendas"]):
-                ultimas_vendas.append({"code": ticket['code'], "data_venda": venda["data_venda"], "primeira_venda": idx == 0})
+        if "historico" in ticket:
+            for leitura in ticket['historico']:
+                ultimas_leituras.append({
+                    "code": ticket['code'],
+                    "data": leitura['data'],
+                    "status": leitura['status']
+                })
 
-ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
+ultimas_leituras.sort(key=lambda x: datetime.strptime(x['data'], "%d/%m/%Y %H:%M:%S"), reverse=True)
 
 with placeholder.container():
-    if ultimas_vendas:
-        for venda in ultimas_vendas[:10]:
-            cor_texto = "green" if venda['primeira_venda'] else "red"
-            st.markdown(f"<span style='color:{cor_texto}'>🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}</span>", unsafe_allow_html=True)
+    if ultimas_leituras:
+        for leitura in ultimas_leituras[:10]:
+            cor = STATUS_CORES.get(leitura['status'], "gray")
+            st.markdown(
+                f"🎟️ Código: {leitura['code']} | 📅 {leitura['data']} | <span style='color:{cor}; font-weight:bold'>{leitura['status']}</span>",
+                unsafe_allow_html=True
+            )
     else:
-        st.info("Nenhum ticket vendido até o momento.")
+        st.info("Nenhuma leitura realizada até o momento.")
 
 st.markdown("---")
 st.caption(CREDITO)
