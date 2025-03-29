@@ -1,19 +1,20 @@
 import streamlit as st
-st.set_page_config(page_title="📱 Vendas Mobile", page_icon="📱", layout="centered")
-
 import av
 import cv2
 import json
 import numpy as np
 import os
 from datetime import datetime
-from PIL import Image, ImageDraw
+from PIL import ImageDraw
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 from app_config import CREDITO, STATUS_CORES
+
+st.set_page_config(page_title="📱 Vendas Mobile", page_icon="📱", layout="centered")
 
 # Configuração inicial
 data_path = "data/tickets_control.json"
 
+# Carregar e atualizar tickets
 def carregar_tickets():
     if os.path.exists(data_path):
         with open(data_path, "r") as file:
@@ -24,6 +25,7 @@ def atualizar_tickets(tickets):
     with open(data_path, "w") as file:
         json.dump(tickets, file, indent=4)
 
+# Verificação e marcação de leitura
 def verificar_qrcode(data):
     tickets = carregar_tickets()
     leitura_atual = {
@@ -47,13 +49,15 @@ def verificar_qrcode(data):
 
     return False, data, leitura_atual['data'], leitura_atual['status']
 
+# Interface principal
 st.title("📱 Vendas no Celular")
 st.markdown("---")
 
 if "usar_audio" not in st.session_state:
     st.session_state.usar_audio = True
 
-st.checkbox("Som", value=st.session_state.usar_audio, key="usar_audio")
+if "ultima_leitura" not in st.session_state:
+    st.session_state.ultima_leitura = None
 
 st.markdown("""
 <audio id="beep-audio" preload="auto">
@@ -61,6 +65,21 @@ st.markdown("""
 </audio>
 """, unsafe_allow_html=True)
 
+col1, col2 = st.columns([8, 2])
+with col1:
+    st.markdown("### Leitura com Câmera ao Vivo")
+with col2:
+    st.session_state.usar_audio = st.checkbox("Som", value=st.session_state.usar_audio)
+
+# Seletor de câmera
+camera_mode = st.selectbox(
+    "Escolher câmera",
+    options=["user", "environment"],
+    index=1,
+    format_func=lambda x: "📷 Frontal" if x == "user" else "🎯 Traseira"
+)
+
+# Processador de vídeo com leitura de QRCode
 class VideoProcessor(VideoTransformerBase):
     def __init__(self):
         self.last_code = None
@@ -90,17 +109,15 @@ class VideoProcessor(VideoTransformerBase):
 
         return img
 
-device_option = st.selectbox("Escolher câmera", options=["user", "environment"], index=1, format_func=lambda x: "📷 Frontal" if x == "user" else "🎯 Traseira")
-
+# Stream de vídeo via WebRTC
 webrtc_streamer(
     key="vendas-mobile",
     video_processor_factory=VideoProcessor,
     media_stream_constraints={
-        "video": {"facingMode": device_option},
+        "video": {"facingMode": camera_mode},
         "audio": False
     },
-    
-    async_processing=True,
+    async_processing=True
 )
 
 st.markdown("---")
