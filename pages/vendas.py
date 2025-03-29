@@ -1,12 +1,11 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 import av
 import cv2
 import numpy as np
 import os
 import json
 from datetime import datetime
-import time
 from app_config import CREDITO
 
 # Configuração inicial
@@ -59,14 +58,14 @@ class QRCodeProcessor(VideoProcessorBase):
                 venda_status, data_venda, qtd_vendas = verificar_qrcode(data)
 
                 if venda_status is True:
-                    self.message_text = f"Ticket {data} vendido!"
+                    self.message_text = f"Nova venda ({data})!"
                     self.message_color = (0, 255, 0)  # Verde
-                    st.audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg")
+                    st.session_state['audio'] = True
                 elif venda_status is False:
-                    self.message_text = f"Ticket {data} já vendido antes! ({qtd_vendas}x)"
+                    self.message_text = f"{data} REUSO! ({qtd_vendas})"
                     self.message_color = (0, 0, 255)  # Vermelho
                 else:
-                    self.message_text = "Ticket não encontrado!"
+                    self.message_text = "Não encontrado!"
                     self.message_color = (0, 0, 255)  # Vermelho
 
                 self.message_time = datetime.now()
@@ -88,34 +87,54 @@ st.set_page_config(page_title="Vendas", page_icon="🛒", layout="centered")
 st.title("🛒 Vendas com QR-Code")
 st.markdown("---")
 
+if 'audio' not in st.session_state:
+    st.session_state['audio'] = False
+
+# Desabilita o áudio da câmera
+rtc_config = RTCConfiguration({
+    "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}],
+    "sdpSemantics": "unified-plan"
+})
+
 webrtc_streamer(
     key="qr-code-scanner",
     video_processor_factory=QRCodeProcessor,
-    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+    rtc_configuration=rtc_config,
+    media_stream_constraints={"video": True, "audio": False},
 )
 
+# Reprodução do áudio fora do processamento pesado
+if st.session_state['audio']:
+    st.markdown("""
+    <audio autoplay>
+        <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
+    </audio>
+    """, unsafe_allow_html=True)
+    st.session_state['audio'] = False
+
+# Atualização do histórico de vendas
 st.markdown("---")
 st.subheader("Últimas Vendas")
 placeholder = st.empty()
 
-while True:
-    tickets = carregar_tickets()
-    ultimas_vendas = []
+# Atualização leve e eficiente
+ultimas_vendas = []
+tickets = carregar_tickets()
+for geracao in tickets:
+    for ticket in geracao['tickets']:
+        if "vendas" in ticket:
+            for idx, venda in enumerate(ticket["vendas"]):
+                ultimas_vendas.append({"code": ticket['code'], "data_venda": venda["data_venda"], "primeira_venda": idx == 0})
 
-    for geracao in tickets:
-        for ticket in geracao['tickets']:
-            if "vendas" in ticket:
-                for idx, venda in enumerate(ticket["vendas"]):
-                    ultimas_vendas.append({"code": ticket['code'], "data_venda": venda["data_venda"], "primeira_venda": idx == 0})
+ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
 
-    ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
+with placeholder.container():
+    if ultimas_vendas:
+        for venda in ultimas_vendas[:10]:
+            cor_texto = "green" if venda['primeira_venda'] else "red"
+            st.markdown(f"<span style='color:{cor_texto}'>🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}</span>", unsafe_allow_html=True)
+    else:
+        st.info("Nenhum ticket vendido até o momento.")
 
-    with placeholder.container():
-        if ultimas_vendas:
-            for venda in ultimas_vendas[:10]:
-                cor_texto = "green" if venda['primeira_venda'] else "red"
-                st.markdown(f"<span style='color:{cor_texto}'>🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}</span>", unsafe_allow_html=True)
-        else:
-            st.info("Nenhum ticket vendido até o momento.")
-
-    time.sleep(3)
+st.markdown("---")
+st.caption(CREDITO)
