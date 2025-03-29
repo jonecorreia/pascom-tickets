@@ -746,6 +746,14 @@
                     {
                         "data": "29/03/2025 12:17:38",
                         "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:30:09",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:32:19",
+                        "status": "REVENDA"
                     }
                 ],
                 "STATUS": "REVENDA"
@@ -855,6 +863,14 @@
                     },
                     {
                         "data": "29/03/2025 12:26:46",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:29:42",
+                        "status": "REVENDA"
+                    },
+                    {
+                        "data": "29/03/2025 12:30:33",
                         "status": "REVENDA"
                     }
                 ],

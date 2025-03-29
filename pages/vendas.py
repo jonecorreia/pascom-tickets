@@ -97,11 +97,15 @@ st.markdown(f"<p style='color:gray'>Leituras {'ativas' if st.session_state.captu
 # Pré-carregar o som de venda (invisível, preparado para execução)
 st.markdown("""
 <audio id="beep-audio" preload="auto">
-    <source src="assets/som/venda.mp3" type="audio/mpeg">
+    <source src="https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg" type="audio/mpeg">
 </audio>
 """, unsafe_allow_html=True)
 
-# Captura da câmera
+# Detectar se está em dispositivo móvel
+user_agent = st.session_state.get("_browser_user_agent", "")
+usar_camera_traseira = "Mobile" in user_agent or "Android" in user_agent or "iPhone" in user_agent
+
+# Captura da câmera (sem device_index, apenas controle de ativação)
 image = camera_input_live() if st.session_state.captura_ativa else None
 
 # Layout da visualização com colunas
