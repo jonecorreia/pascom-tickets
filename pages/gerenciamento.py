@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import json
 from datetime import datetime
-from config import CREDITO
+from config import *
 
 # Página inicial
 st.set_page_config(page_title="Gerenciamento de Tickets", page_icon="⚙️", layout="wide")
