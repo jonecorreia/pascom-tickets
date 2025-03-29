@@ -114,7 +114,11 @@ webrtc_streamer(
     key="vendas-mobile",
     video_processor_factory=VideoProcessor,
     media_stream_constraints={
-        "video": {"facingMode": camera_mode},
+        "video": {
+            "width": {"ideal": 1280},
+            "height": {"ideal": 720},
+            "facingMode": {"ideal": camera_mode}  # alterado para suportar sugestão JS do post
+        },
         "audio": False
     },
     async_processing=True
