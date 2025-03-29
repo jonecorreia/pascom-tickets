@@ -2,9 +2,10 @@ import streamlit as st
 import os
 import json
 from datetime import datetime
-from app_config import *
+from app_config import CREDITO
 from PIL import Image
-from pyzbar.pyzbar import decode
+import numpy as np
+import cv2
 
 # Configuração inicial
 data_path = "data/tickets_control.json"
@@ -31,11 +32,12 @@ picture = st.camera_input("Tirar foto do QR-Code", disabled=not enable)
 
 if picture:
     image = Image.open(picture)
-    decoded_data = decode(image)
+    image_np = np.array(image.convert('RGB'))
 
-    if decoded_data:
-        qr_code = decoded_data[0].data.decode('utf-8')
+    detector = cv2.QRCodeDetector()
+    qr_code, _, _ = detector.detectAndDecode(image_np)
 
+    if qr_code:
         tickets = carregar_tickets()
         ticket_encontrado = False
 
