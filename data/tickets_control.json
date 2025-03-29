@@ -11,37 +11,49 @@
                 "pdf": "P.00003.pdf",
                 "ticket_number": 1,
                 "code": "P.00003.00001",
-                "description": ""
+                "description": "",
+                "vendido": true,
+                "data_venda": "28/03/2025 22:06:49"
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 2,
                 "code": "P.00003.00002",
-                "description": ""
+                "description": "",
+                "vendido": true,
+                "data_venda": "28/03/2025 22:06:56"
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 3,
                 "code": "P.00003.00003",
-                "description": ""
+                "description": "",
+                "vendido": true,
+                "data_venda": "28/03/2025 22:06:59"
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 4,
                 "code": "P.00003.00004",
-                "description": ""
+                "description": "",
+                "vendido": true,
+                "data_venda": "28/03/2025 22:06:55"
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 5,
                 "code": "P.00003.00005",
-                "description": ""
+                "description": "",
+                "vendido": true,
+                "data_venda": "28/03/2025 22:07:06"
             },
             {
                 "pdf": "P.00003.pdf",
                 "ticket_number": 6,
                 "code": "P.00003.00006",
-                "description": ""
+                "description": "",
+                "vendido": true,
+                "data_venda": "28/03/2025 22:07:00"
             },
             {
                 "pdf": "P.00003.pdf",

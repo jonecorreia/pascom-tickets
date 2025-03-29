@@ -3,36 +3,108 @@ from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 import av
 import cv2
 import numpy as np
+import os
+import json
+from datetime import datetime
+from app_config import CREDITO
 
+# Configuração inicial
+data_path = "data/tickets_control.json"
+
+# Carregar tickets
+def carregar_tickets():
+    if os.path.exists(data_path):
+        with open(data_path, "r") as file:
+            return json.load(file)
+    return []
+
+# Atualizar tickets
+def atualizar_tickets(tickets):
+    with open(data_path, "w") as file:
+        json.dump(tickets, file, indent=4)
+
+# Verificar e marcar venda
+def verificar_qrcode(data):
+    tickets = carregar_tickets()
+    for geracao in tickets:
+        for ticket in geracao['tickets']:
+            if ticket['code'] == data:
+                if "vendido" not in ticket:
+                    ticket['vendido'] = True
+                    ticket['data_venda'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                    atualizar_tickets(tickets)
+                    return True, ticket['data_venda']
+                else:
+                    return False, ticket['data_venda']
+    return None, None
+
+# Classe de processamento de vídeo
 class QRCodeProcessor(VideoProcessorBase):
     def __init__(self):
         self.qr_detector = cv2.QRCodeDetector()
+        self.last_detected = None
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
 
-        # Detecta e decodifica o QR code
         data, bbox, _ = self.qr_detector.detectAndDecode(img)
         if bbox is not None and data:
-            # Desenha o contorno do QR code
+            if data != self.last_detected and data.startswith("P."):
+                venda_status, data_venda = verificar_qrcode(data)
+
+                if venda_status is True:
+                    st.success(f"🎟️ Ticket {data} vendido em {data_venda}")
+                    st.audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg")
+                    cor_mensagem = (0, 255, 0)  # Verde
+                elif venda_status is False:
+                    st.warning(f"⚠️ Ticket {data} já vendido em {data_venda}")
+                    cor_mensagem = (0, 0, 255)  # Vermelho
+                else:
+                    st.error("❌ Ticket não encontrado.")
+                    cor_mensagem = (0, 0, 255)  # Vermelho
+
+                self.last_detected = data
+
+                # Exibir mensagem no vídeo
+                cv2.putText(img, f"{data}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, cor_mensagem, 2, cv2.LINE_AA)
+
             n_points = len(bbox)
             for j in range(n_points):
                 pt1 = tuple(bbox[j][0].astype(int))
-                pt2 = tuple(bbox[(j+1) % n_points][0].astype(int))
+                pt2 = tuple(bbox[(j + 1) % n_points][0].astype(int))
                 cv2.line(img, pt1, pt2, color=(0, 255, 0), thickness=2)
-            # Exibe os dados decodificados
-            cv2.putText(img, data, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-            st.session_state['qr_data'] = data
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-st.title("Leitor de QR Code em Tempo Real")
+# Interface Streamlit
+st.set_page_config(page_title="Vendas", page_icon="🛒", layout="centered")
+st.title("🛒 Vendas com QR-Code")
+st.markdown("---")
 
-webrtc_ctx = webrtc_streamer(
+webrtc_streamer(
     key="qr-code-scanner",
     video_processor_factory=QRCodeProcessor,
-    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
 )
 
-if 'qr_data' in st.session_state:
-    st.write(f"Dados do QR Code: {st.session_state['qr_data']}")
+st.markdown("---")
+st.subheader("Últimas Vendas")
+tickets = carregar_tickets()
+ultimas_vendas = []
+
+for geracao in tickets:
+    for ticket in geracao['tickets']:
+        if "vendido" in ticket:
+            ultimas_vendas.append(ticket)
+
+ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
+
+if ultimas_vendas:
+    for venda in ultimas_vendas[:10]:
+        cor_texto = "green" if venda['vendido'] else "red"
+        st.markdown(f"<span style='color:{cor_texto}'>🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}</span>", unsafe_allow_html=True)
+else:
+    st.info("Nenhum ticket vendido até o momento.")
+
+st.markdown("---")
+st.caption(CREDITO)
