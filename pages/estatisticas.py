@@ -72,12 +72,20 @@ if grupo:
     st.markdown(f"### 💰 Total arrecadado: `R$ {vendidos * valor_unitario:.2f}`")
 
     # Gráfico de vendas por dia (plotly + Dash)
-    if datas:
-        df_vendas = pd.DataFrame({"data": datas})
-        df_vendas["dia"] = df_vendas["data"].dt.date
-        resumo = df_vendas.groupby("dia").size().reset_index(name="Vendas")
+    vendas_por_dia = {}
+    for ticket in grupo["tickets"]:
+        for h in ticket.get("historico", []):
+            if h.get("status") in ["DISPONÍVEL", "REVENDA"]:
+                try:
+                    data = datetime.strptime(h["data"], "%d/%m/%Y %H:%M:%S")
+                    dia = data.strftime("%d/%m/%Y")
+                    vendas_por_dia[dia] = vendas_por_dia.get(dia, 0) + 1
+                except:
+                    continue
 
-        fig = px.bar(resumo, x="dia", y="Vendas", labels={"dia": "Data", "Vendas": "Tickets Vendidos"}, title="Vendas por dia")
+    if vendas_por_dia:
+        df_vendas = pd.DataFrame(list(vendas_por_dia.items()), columns=["dia", "Vendas"])
+        fig = px.bar(df_vendas, x="dia", y="Vendas", labels={"dia": "Data", "Vendas": "Tickets Vendidos"}, title="Vendas por dia")
         st.plotly_chart(fig, use_container_width=True)
 
 # Estatísticas complementares
