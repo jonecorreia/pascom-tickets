@@ -3,9 +3,8 @@ import os
 import json
 from datetime import datetime
 from config import CREDITO
-import cv2
+from PIL import Image
 from pyzbar.pyzbar import decode
-import numpy as np
 
 # Configuração inicial
 data_path = "data/tickets_control.json"
@@ -26,35 +25,17 @@ def atualizar_tickets(tickets):
     with open(data_path, "w") as file:
         json.dump(tickets, file, indent=4)
 
-# Ler QR Code
-def ler_qr_code():
-    cap = cv2.VideoCapture(0)
-    decoded_data = None
+# Interface da câmera via Streamlit (web)
+enable = st.checkbox("📸 Ativar câmera")
+picture = st.camera_input("Tirar foto do QR-Code", disabled=not enable)
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            st.error("Não foi possível acessar a câmera.")
-            break
+if picture:
+    image = Image.open(picture)
+    decoded_data = decode(image)
 
-        for barcode in decode(frame):
-            decoded_data = barcode.data.decode('utf-8')
-            cap.release()
-            cv2.destroyAllWindows()
-            return decoded_data
+    if decoded_data:
+        qr_code = decoded_data[0].data.decode('utf-8')
 
-        cv2.imshow("QR Code Scanner - Pressione 'q' para sair", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-    return None
-
-if st.button("📷 Ler QR-Code"):
-    qr_code = ler_qr_code()
-
-    if qr_code:
         tickets = carregar_tickets()
         ticket_encontrado = False
 
@@ -76,11 +57,11 @@ if st.button("📷 Ler QR-Code"):
         if not ticket_encontrado:
             st.error("Ticket não encontrado.")
     else:
-        st.warning("Nenhum QR-Code detectado.")
+        st.error("Nenhum QR-Code detectado na imagem.")
 
 st.markdown("---")
 
-# Exibir últimos tickets vendidos
+# Exibir últimas vendas
 st.subheader("Últimas Vendas")
 tickets = carregar_tickets()
 ultimas_vendas = []
@@ -93,7 +74,7 @@ for geracao in tickets:
 ultimas_vendas.sort(key=lambda x: datetime.strptime(x['data_venda'], "%d/%m/%Y %H:%M:%S"), reverse=True)
 
 if ultimas_vendas:
-    for venda in ultimas_vendas[:10]:  # Exibir apenas as 10 últimas vendas
+    for venda in ultimas_vendas[:10]:
         st.write(f"🎟️ Código: {venda['code']} | 📅 Vendido em: {venda['data_venda']}")
 else:
     st.info("Nenhum ticket vendido até o momento.")
