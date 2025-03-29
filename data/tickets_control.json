@@ -254,7 +254,14 @@
                 "pdf": "P.00003.pdf",
                 "ticket_number": 22,
                 "code": "P.00003.00022",
-                "description": ""
+                "description": "",
+                "historico": [
+                    {
+                        "data": "29/03/2025 13:17:52",
+                        "status": "DISPON\u00cdVEL"
+                    }
+                ],
+                "STATUS": "DISPON\u00cdVEL"
             },
             {
                 "pdf": "P.00003.pdf",
